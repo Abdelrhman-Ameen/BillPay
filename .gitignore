@@ -1,0 +1,19 @@
+# IDE and OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Runtime configuration
+.env
+*.local
+
+# Build outputs
+backend/target/
+frontend/dist/
+frontend/.angular/
+frontend/node_modules/
+
+# Logs
+*.log

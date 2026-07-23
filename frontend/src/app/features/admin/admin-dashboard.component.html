@@ -1,0 +1,236 @@
+<section class="page-shell">
+  <div class="page-heading admin-heading">
+    <div>
+      <p class="eyebrow">Administrator control room</p>
+      <h1>KEEP THE SYSTEM MOVING.</h1>
+    </div>
+    <p>Create providers, issue customer bills, and keep a clear view of every payment.</p>
+  </div>
+
+  <div class="admin-stats">
+    <article>
+      <span class="stat-icon"><svg lucideBuilding2 aria-hidden="true"></svg></span>
+      <div><small>Providers</small><strong>{{ providers().length.toString().padStart(2, '0') }}</strong></div>
+    </article>
+    <article>
+      <span class="stat-icon"><svg lucideUsers aria-hidden="true"></svg></span>
+      <div><small>Customers</small><strong>{{ customers().length.toString().padStart(2, '0') }}</strong></div>
+    </article>
+    <article class="volume-stat">
+      <span class="stat-icon"><svg lucideCircleDollarSign aria-hidden="true"></svg></span>
+      <div>
+        <small>Successful volume</small>
+        <strong>{{ successfulVolume() | currency: 'EGP' : 'EGP ' : '1.2-2' }}</strong>
+      </div>
+    </article>
+  </div>
+
+  <div class="admin-tabs" role="tablist" aria-label="Admin tools">
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="tab() === 'providers'"
+      [class.active]="tab() === 'providers'"
+      (click)="switchTab('providers')"
+    >
+      <svg lucideBuilding2 aria-hidden="true"></svg>
+      Service providers
+      <span>{{ providers().length }}</span>
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="tab() === 'bills'"
+      [class.active]="tab() === 'bills'"
+      (click)="switchTab('bills')"
+    >
+      <svg lucideFilePlus2 aria-hidden="true"></svg>
+      Create bill
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="tab() === 'payments'"
+      [class.active]="tab() === 'payments'"
+      (click)="switchTab('payments')"
+    >
+      <svg lucideReceiptText aria-hidden="true"></svg>
+      All payments
+      <span>{{ payments().length }}</span>
+    </button>
+    <button class="refresh-button" type="button" (click)="load()" aria-label="Refresh admin data" title="Refresh data">
+      <svg lucideRefreshCw aria-hidden="true"></svg>
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="error-banner admin-message" role="alert">{{ error() }}</div>
+  }
+  @if (success()) {
+    <div class="success-banner admin-message" role="status">{{ success() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="panel empty-state">Loading the admin workspace…</div>
+  } @else {
+    @switch (tab()) {
+      @case ('providers') {
+        <div class="admin-layout">
+          <section class="panel admin-form-panel">
+            <p class="eyebrow">New service</p>
+            <h2>ADD A PROVIDER</h2>
+            <p>Providers become selectable when an administrator creates a customer bill.</p>
+            <form [formGroup]="providerForm" (ngSubmit)="createProvider()">
+              <div class="field">
+                <label for="provider-name">Provider name</label>
+                <input id="provider-name" formControlName="name" placeholder="Delta Energy" />
+              </div>
+              <div class="field">
+                <label for="provider-category">Category</label>
+                <select id="provider-category" formControlName="category">
+                  <option value="" disabled>Select a category</option>
+                  <option>Electricity</option>
+                  <option>Internet</option>
+                  <option>Water</option>
+                  <option>Mobile</option>
+                  <option>Utilities</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="provider-description">Description</label>
+                <textarea
+                  id="provider-description"
+                  formControlName="description"
+                  placeholder="What customers can pay through this provider"
+                ></textarea>
+              </div>
+              <button class="button" type="submit" [disabled]="saving()">
+                {{ saving() ? 'Creating…' : 'Create provider' }}
+                <svg lucidePlus aria-hidden="true"></svg>
+              </button>
+            </form>
+          </section>
+
+          <section class="provider-list">
+            @for (provider of providers(); track provider.id; let index = $index) {
+              <article class="provider-row panel">
+                <span class="provider-index">{{ (index + 1).toString().padStart(2, '0') }}</span>
+                <div>
+                  <small>{{ provider.category }}</small>
+                  <h3>{{ provider.name }}</h3>
+                  <p>{{ provider.description }}</p>
+                </div>
+                <span class="live-badge"><i></i>Live</span>
+              </article>
+            } @empty {
+              <div class="panel empty-state">No service providers have been created yet.</div>
+            }
+          </section>
+        </div>
+      }
+      @case ('bills') {
+        <div class="admin-layout bill-layout">
+          <section class="panel admin-form-panel">
+            <p class="eyebrow">Assign an amount and due date</p>
+            <h2>CREATE A BILL</h2>
+            <p>Every bill belongs to exactly one customer and one service provider.</p>
+            <form [formGroup]="billForm" (ngSubmit)="createBill()">
+              <div class="field">
+                <label for="customer">Customer</label>
+                <select id="customer" formControlName="customerId">
+                  <option [ngValue]="0" disabled>Select a customer</option>
+                  @for (customer of customers(); track customer.id) {
+                    <option [ngValue]="customer.id">{{ customer.fullName }} — {{ customer.email }}</option>
+                  }
+                </select>
+              </div>
+              <div class="field">
+                <label for="provider">Service provider</label>
+                <select id="provider" formControlName="serviceProviderId">
+                  <option [ngValue]="0" disabled>Select a provider</option>
+                  @for (provider of providers(); track provider.id) {
+                    <option [ngValue]="provider.id">{{ provider.name }} — {{ provider.category }}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="reference">Reference number</label>
+                  <input id="reference" formControlName="referenceNumber" placeholder="DE-2026-1049" />
+                </div>
+                <div class="field">
+                  <label for="amount">Amount (EGP)</label>
+                  <input id="amount" type="number" min="0.01" step="0.01" formControlName="amount" />
+                </div>
+              </div>
+              <div class="field">
+                <label for="due-date">Due date</label>
+                <input id="due-date" type="date" [min]="minDate" formControlName="dueDate" />
+              </div>
+              <button class="button" type="submit" [disabled]="saving()">
+                {{ saving() ? 'Creating…' : 'Issue customer bill' }}
+                <svg lucideFilePlus2 aria-hidden="true"></svg>
+              </button>
+            </form>
+          </section>
+          <aside class="rules-card panel">
+            <span class="rules-number">04</span>
+            <p class="eyebrow">Built-in rules</p>
+            <h3>SAFE BY DEFAULT</h3>
+            <ul>
+              <li><svg lucideCheck aria-hidden="true"></svg>Amount must be positive</li>
+              <li><svg lucideCheck aria-hidden="true"></svg>Due date cannot be in the past</li>
+              <li><svg lucideCheck aria-hidden="true"></svg>Reference numbers are unique</li>
+              <li><svg lucideCheck aria-hidden="true"></svg>Bill starts in pending state</li>
+            </ul>
+          </aside>
+        </div>
+      }
+      @case ('payments') {
+        <div class="panel payments-panel">
+          @if (payments().length === 0) {
+            <div class="empty-state">No payment attempts have been recorded yet.</div>
+          } @else {
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Transaction</th>
+                    <th>Customer</th>
+                    <th>Provider</th>
+                    <th>Method</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (payment of payments(); track payment.id) {
+                    <tr>
+                      <td><span class="mono">{{ payment.transactionReference }}</span><small>{{ payment.billReference }}</small></td>
+                      <td>{{ payment.customerName }}</td>
+                      <td>{{ payment.serviceProviderName }}</td>
+                      <td>{{ payment.method | titlecase }}</td>
+                      <td><strong>{{ payment.amount | currency: 'EGP' : 'EGP ' : '1.2-2' }}</strong></td>
+                      <td>
+                        <span class="status" [class.success]="payment.status === 'SUCCESS'" [class.failed]="payment.status === 'FAILED'">
+                          @if (payment.status === 'SUCCESS') {
+                            <svg lucideCheck aria-hidden="true"></svg>
+                          } @else {
+                            <svg lucideX aria-hidden="true"></svg>
+                          }
+                          {{ payment.status }}
+                        </span>
+                      </td>
+                      <td>{{ payment.createdAt | date: 'dd MMM, HH:mm' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
+    }
+  }
+</section>

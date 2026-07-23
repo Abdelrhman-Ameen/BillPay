@@ -1,0 +1,132 @@
+<section class="auth-page">
+  <div class="auth-story">
+    <div class="auth-grid" aria-hidden="true"></div>
+    <div class="story-content">
+      <p class="eyebrow">Bills in. Stress out.</p>
+      <h1>
+        @if (mode() === 'login') {
+          WELCOME <span>BACK.</span>
+        } @else {
+          START <span>CLEAR.</span>
+        }
+      </h1>
+      <p>
+        One secure account for every due date, payment attempt, and receipt you need to
+        remember.
+      </p>
+      <ul>
+        <li><span><svg lucideCheck aria-hidden="true"></svg></span>Own your bill history</li>
+        <li><span><svg lucideCheck aria-hidden="true"></svg></span>Use three payment methods</li>
+        <li><span><svg lucideCheck aria-hidden="true"></svg></span>See success or failure instantly</li>
+      </ul>
+    </div>
+    <div class="story-card">
+      <span class="story-icon"><svg lucideZap aria-hidden="true"></svg></span>
+      <div><small>Next due</small><strong>Cairo Electric</strong></div>
+      <strong>EGP 745.50</strong>
+    </div>
+  </div>
+
+  <div class="auth-form-wrap">
+    <div class="auth-form-card">
+      <span class="lock-icon"><svg lucideLockKeyhole aria-hidden="true"></svg></span>
+      <p class="form-kicker">{{ mode() === 'login' ? 'Secure access' : 'Customer registration' }}</p>
+      <h2>{{ mode() === 'login' ? 'Log in to BillPay' : 'Create your account' }}</h2>
+      <p class="form-lede">
+        {{
+          mode() === 'login'
+            ? 'Enter your details or use a demo account.'
+            : 'You’ll be signed in as soon as your account is ready.'
+        }}
+      </p>
+
+      @if (mode() === 'login') {
+        <div class="demo-row">
+          <button type="button" (click)="useDemo('customer')">
+            <span>C</span>
+            <span><small>Demo as</small>Customer</span>
+          </button>
+          <button type="button" (click)="useDemo('admin')">
+            <span>A</span>
+            <span><small>Demo as</small>Admin</span>
+          </button>
+        </div>
+        <div class="divider"><span>or use your account</span></div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        @if (mode() === 'register') {
+          <div class="field">
+            <label for="fullName">Full name</label>
+            <input id="fullName" formControlName="fullName" autocomplete="name" placeholder="Mariam Hassan" />
+            @if (form.controls.fullName.touched && form.controls.fullName.invalid) {
+              <small class="field-error">Please enter your full name.</small>
+            }
+          </div>
+        }
+
+        <div class="field">
+          <label for="email">Email address</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+            placeholder="you@example.com"
+          />
+          @if (form.controls.email.touched && form.controls.email.invalid) {
+            <small class="field-error">Enter a valid email address.</small>
+          }
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="password-field">
+            <input
+              id="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+              [autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"
+              placeholder="At least 8 characters"
+            />
+            <button
+              type="button"
+              (click)="togglePassword()"
+              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+              [title]="showPassword() ? 'Hide password' : 'Show password'"
+            >
+              @if (showPassword()) {
+                <svg lucideEyeOff aria-hidden="true"></svg>
+              } @else {
+                <svg lucideEye aria-hidden="true"></svg>
+              }
+            </button>
+          </div>
+          @if (form.controls.password.touched && form.controls.password.invalid) {
+            <small class="field-error">Password must contain at least 8 characters.</small>
+          }
+        </div>
+
+        @if (error()) {
+          <div class="error-banner" role="alert">{{ error() }}</div>
+        }
+
+        <button class="button submit-button" type="submit" [disabled]="loading()">
+          {{ loading() ? 'Please wait…' : mode() === 'login' ? 'Log in securely' : 'Create account' }}
+          <svg lucideArrowRight aria-hidden="true"></svg>
+        </button>
+      </form>
+
+      <p class="switch-copy">
+        {{ mode() === 'login' ? 'New to BillPay?' : 'Already have an account?' }}
+        <a [routerLink]="mode() === 'login' ? '/register' : '/login'">
+          {{ mode() === 'login' ? 'Create one' : 'Log in' }}
+        </a>
+      </p>
+      <p class="security-note">
+        <svg lucideShieldCheck aria-hidden="true"></svg>
+        Passwords are stored as BCrypt hashes.
+      </p>
+    </div>
+  </div>
+</section>

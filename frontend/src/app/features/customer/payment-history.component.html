@@ -1,0 +1,117 @@
+<section class="page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Every attempt, recorded</p>
+      <h1>PAYMENT HISTORY</h1>
+    </div>
+    <p>
+      Successful and failed simulated payments stay together, so every result is easy to
+      explain.
+    </p>
+  </div>
+
+  <div class="history-summary">
+    <div>
+      <span>Successful payments</span>
+      <strong>{{ successfulTotal() | currency: 'EGP' : 'EGP ' : '1.2-2' }}</strong>
+    </div>
+    <div>
+      <span>Total attempts</span>
+      <strong>{{ payments().length.toString().padStart(2, '0') }}</strong>
+    </div>
+    <div>
+      <span>Failed attempts</span>
+      <strong>{{ failedCount }}</strong>
+    </div>
+  </div>
+
+  <div class="history-toolbar">
+    <label class="search-box">
+      <svg lucideSearch aria-hidden="true"></svg>
+      <span class="sr-only">Search payments</span>
+      <input
+        type="search"
+        placeholder="Search provider or reference"
+        [value]="search()"
+        (input)="search.set($any($event.target).value)"
+      />
+    </label>
+    <div class="filter-pills" aria-label="Filter payment status">
+      @for (filter of ['ALL', 'SUCCESS', 'FAILED']; track filter) {
+        <button
+          type="button"
+          [class.active]="statusFilter() === filter"
+          (click)="statusFilter.set($any(filter))"
+        >
+          {{ filter | titlecase }}
+        </button>
+      }
+    </div>
+    <button class="icon-button" type="button" (click)="load()" aria-label="Refresh history" title="Refresh history">
+      <svg lucideRefreshCw aria-hidden="true"></svg>
+    </button>
+  </div>
+
+  <div class="panel history-panel">
+    @if (loading()) {
+      <div class="empty-state">Loading your transaction history…</div>
+    } @else if (error()) {
+      <div class="empty-state">
+        <div>
+          <p>{{ error() }}</p>
+          <button class="button button-small" type="button" (click)="load()">Try again</button>
+        </div>
+      </div>
+    } @else if (filteredPayments().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon"><svg lucideHistory aria-hidden="true"></svg></div>
+        <div>
+          <strong>No matching payments</strong>
+          <p>Your first payment attempt will appear here with its final result.</p>
+        </div>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Transaction</th>
+              <th>Provider</th>
+              <th>Method</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (payment of filteredPayments(); track payment.id) {
+              <tr>
+                <td>
+                  <span class="reference">{{ payment.transactionReference }}</span>
+                  <small>{{ payment.billReference }}</small>
+                </td>
+                <td>{{ payment.serviceProviderName }}</td>
+                <td>{{ payment.method | titlecase }}</td>
+                <td>
+                  {{ payment.createdAt | date: 'dd MMM yyyy' }}
+                  <small>{{ payment.createdAt | date: 'HH:mm' }}</small>
+                </td>
+                <td><strong>{{ payment.amount | currency: 'EGP' : 'EGP ' : '1.2-2' }}</strong></td>
+                <td>
+                  <span class="status" [class.success]="payment.status === 'SUCCESS'" [class.failed]="payment.status === 'FAILED'">
+                    @if (payment.status === 'SUCCESS') {
+                      <svg lucideCheck aria-hidden="true"></svg>
+                    } @else {
+                      <svg lucideX aria-hidden="true"></svg>
+                    }
+                    {{ payment.status }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</section>

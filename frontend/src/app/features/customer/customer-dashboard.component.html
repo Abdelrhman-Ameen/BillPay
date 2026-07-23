@@ -1,0 +1,220 @@
+<section class="page-shell">
+  <div class="welcome-row">
+    <div>
+      <p class="eyebrow">Customer workspace</p>
+      <h1>HELLO, {{ auth.user()?.fullName?.split(' ')?.[0] }}.</h1>
+      <p>Here is the clearest view of what is due and what is already done.</p>
+    </div>
+    <div class="date-chip">
+      <span>Today</span>
+      <strong>{{ today | date: 'dd MMM yyyy' }}</strong>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <article class="summary-card primary">
+      <div class="summary-top">
+        <span>Total due</span>
+        <svg lucideReceiptText aria-hidden="true"></svg>
+      </div>
+      <strong>{{ totalDue() | currency: 'EGP' : 'EGP ' : '1.2-2' }}</strong>
+      <div class="summary-footer">
+        <span>{{ pendingBills().length }} pending bill{{ pendingBills().length === 1 ? '' : 's' }}</span>
+        <span class="summary-arrow"><svg lucideArrowRight aria-hidden="true"></svg></span>
+      </div>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-top">
+        <span>Paid bills</span>
+        <svg lucideCheck aria-hidden="true"></svg>
+      </div>
+      <strong>{{ paidBills().length }}</strong>
+      <p>Successful and settled</p>
+    </article>
+
+    <article class="summary-card">
+      <div class="summary-top">
+        <span>Payment methods</span>
+        <svg lucideWallet aria-hidden="true"></svg>
+      </div>
+      <strong>03</strong>
+      <p>Cash, card, and wallet</p>
+    </article>
+  </div>
+
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Your bills</p>
+      <h2>DUE & DONE</h2>
+    </div>
+    <button class="icon-button" type="button" (click)="loadBills()" aria-label="Refresh bills" title="Refresh bills">
+      <svg lucideRefreshCw aria-hidden="true"></svg>
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="bill-grid loading-grid" aria-label="Loading bills">
+      <div class="bill-skeleton"></div>
+      <div class="bill-skeleton"></div>
+      <div class="bill-skeleton"></div>
+    </div>
+  } @else if (loadError()) {
+    <div class="panel empty-state">
+      <div>
+        <p>{{ loadError() }}</p>
+        <button class="button button-small" type="button" (click)="loadBills()">Try again</button>
+      </div>
+    </div>
+  } @else if (bills().length === 0) {
+    <div class="panel empty-state">No bills have been created for your account yet.</div>
+  } @else {
+    <div class="bill-grid">
+      @for (bill of bills(); track bill.id) {
+        <article class="bill-card" [class.is-paid]="bill.status === 'PAID'">
+          <div class="bill-card-top">
+            <span class="provider-icon">
+              @switch (bill.serviceCategory.toLowerCase()) {
+                @case ('electricity') {
+                  <svg lucideZap aria-hidden="true"></svg>
+                }
+                @case ('internet') {
+                  <svg lucideWifi aria-hidden="true"></svg>
+                }
+                @case ('water') {
+                  <svg lucideDroplets aria-hidden="true"></svg>
+                }
+                @default {
+                  <svg lucideReceiptText aria-hidden="true"></svg>
+                }
+              }
+            </span>
+            <span
+              class="status"
+              [class.pending]="bill.status === 'PENDING'"
+              [class.paid]="bill.status === 'PAID'"
+              [class.cancelled]="bill.status === 'CANCELLED'"
+              >{{ bill.status }}</span
+            >
+          </div>
+          <div class="provider-copy">
+            <small>{{ bill.serviceCategory }}</small>
+            <h3>{{ bill.serviceProviderName }}</h3>
+            <span>{{ bill.referenceNumber }}</span>
+          </div>
+          <div class="bill-amount">
+            <small>Amount</small>
+            <strong>{{ bill.amount | currency: 'EGP' : 'EGP ' : '1.2-2' }}</strong>
+          </div>
+          <div class="bill-meta">
+            <span><small>Due date</small>{{ bill.dueDate | date: 'dd MMM yyyy' }}</span>
+            @if (bill.status === 'PENDING') {
+              <button class="button button-small" type="button" (click)="openPayment(bill)">
+                Pay now
+                <svg lucideArrowRight aria-hidden="true"></svg>
+              </button>
+            } @else {
+              <span class="settled"><svg lucideCheck aria-hidden="true"></svg>Settled</span>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>
+
+@if (selectedBill(); as bill) {
+  <div class="modal-backdrop" (click)="closePayment()">
+    <section
+      class="payment-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="payment-title"
+      (click)="$event.stopPropagation()"
+    >
+      <button
+        class="modal-close"
+        type="button"
+        (click)="closePayment()"
+        aria-label="Close payment dialog"
+        title="Close"
+      >
+        <svg lucideX aria-hidden="true"></svg>
+      </button>
+
+      @if (!paymentResult()) {
+        <p class="eyebrow">Simulated payment</p>
+        <h2 id="payment-title">PAY {{ bill.serviceProviderName.toUpperCase() }}</h2>
+        <div class="payment-total">
+          <span>Amount due</span>
+          <strong>{{ bill.amount | currency: 'EGP' : 'EGP ' : '1.2-2' }}</strong>
+          <small>{{ bill.referenceNumber }}</small>
+        </div>
+
+        <fieldset>
+          <legend>Choose payment method</legend>
+          <div class="method-grid">
+            @for (method of ['CARD', 'WALLET', 'CASH']; track method) {
+              <button
+                type="button"
+                [class.selected]="selectedMethod() === method"
+                (click)="selectedMethod.set($any(method))"
+              >
+                <span class="method-icon">
+                  @switch (method) {
+                    @case ('CARD') {
+                      <svg lucideCreditCard aria-hidden="true"></svg>
+                    }
+                    @case ('WALLET') {
+                      <svg lucideWallet aria-hidden="true"></svg>
+                    }
+                    @default {
+                      <svg lucideBanknote aria-hidden="true"></svg>
+                    }
+                  }
+                </span>
+                <strong>{{ method | titlecase }}</strong>
+                <small>{{ methodNote($any(method)) }}</small>
+              </button>
+            }
+          </div>
+        </fieldset>
+
+        <div class="simulation-note">
+          <svg lucideShieldCheck aria-hidden="true"></svg>
+          This is a simulator. No real money or card details are used.
+        </div>
+
+        @if (paymentError()) {
+          <div class="error-banner" role="alert">{{ paymentError() }}</div>
+        }
+
+        <button class="button confirm-button" type="button" (click)="pay()" [disabled]="paying()">
+          {{ paying() ? 'Processing…' : 'Confirm simulated payment' }}
+          <svg lucideArrowRight aria-hidden="true"></svg>
+        </button>
+      } @else if (paymentResult(); as result) {
+        <div class="result-state" [class.failed]="result.status === 'FAILED'">
+          <span class="result-icon">
+            @if (result.status === 'SUCCESS') {
+              <svg lucideCheck aria-hidden="true"></svg>
+            } @else {
+              <svg lucideX aria-hidden="true"></svg>
+            }
+          </span>
+          <p class="eyebrow">Payment {{ result.status.toLowerCase() }}</p>
+          <h2>{{ result.status === 'SUCCESS' ? 'BILL SETTLED.' : 'NOT THIS TIME.' }}</h2>
+          <p>{{ result.message }}</p>
+          <div class="receipt-row">
+            <span>Reference</span>
+            <strong>{{ result.transactionReference }}</strong>
+          </div>
+          <button class="button" type="button" (click)="closePayment()">
+            Back to bills
+            <svg lucideArrowRight aria-hidden="true"></svg>
+          </button>
+        </div>
+      }
+    </section>
+  </div>
+}

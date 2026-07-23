@@ -1,0 +1,56 @@
+<div class="scroll-progress" aria-hidden="true"></div>
+
+<header class="site-header">
+  <a class="brand" routerLink="/" aria-label="BillPay home">
+    <span class="brand-mark">B</span>
+    <span>BILLPAY</span>
+  </a>
+
+  <nav aria-label="Primary navigation">
+    @if (!auth.isAuthenticated()) {
+      <a routerLink="/" fragment="how-it-works">How it works</a>
+      <a routerLink="/" fragment="services">Services</a>
+    } @else if (auth.isAdmin()) {
+      <a routerLink="/admin" routerLinkActive="active">Admin workspace</a>
+    } @else {
+      <a routerLink="/dashboard" routerLinkActive="active">My bills</a>
+      <a routerLink="/history" routerLinkActive="active">History</a>
+    }
+  </nav>
+
+  <div class="header-actions">
+    <button
+      class="icon-button"
+      type="button"
+      (click)="theme.toggle()"
+      [attr.aria-label]="theme.theme() === 'dark' ? 'Use light theme' : 'Use dark theme'"
+      [title]="theme.theme() === 'dark' ? 'Use light theme' : 'Use dark theme'"
+    >
+      @if (theme.theme() === 'dark') {
+        <svg lucideSun aria-hidden="true"></svg>
+      } @else {
+        <svg lucideMoon aria-hidden="true"></svg>
+      }
+    </button>
+
+    @if (auth.isAuthenticated()) {
+      <button class="user-pill" type="button" (click)="auth.goToWorkspace()">
+        <span class="avatar">{{ auth.user()?.fullName?.charAt(0) }}</span>
+        <span>{{ auth.user()?.fullName }}</span>
+      </button>
+      <button class="icon-button" type="button" (click)="auth.logout()" aria-label="Log out" title="Log out">
+        <svg lucideLogOut aria-hidden="true"></svg>
+      </button>
+    } @else {
+      <a class="text-link" routerLink="/login">Log in</a>
+      <a class="button button-small" routerLink="/register">
+        Get started
+        <svg lucideArrowRight aria-hidden="true"></svg>
+      </a>
+    }
+  </div>
+</header>
+
+<main>
+  <router-outlet />
+</main>
