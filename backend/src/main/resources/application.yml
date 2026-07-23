@@ -2,7 +2,7 @@ spring:
   application:
     name: BillPay
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/billpay}
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:billpay}}
     username: ${DB_USERNAME:billpay}
     password: ${DB_PASSWORD:billpay}
   jpa:
@@ -20,7 +20,11 @@ server:
 
 app:
   security:
-    jwt-secret: ${JWT_SECRET:QmlsbFBheURlbW9TZWNyZXRLZXlGb3JEZXZlbG9wbWVudE9ubHkh}
+    jwt-secret: ${JWT_SECRET}
     token-lifetime-hours: 12
+  admin:
+    name: ${ADMIN_NAME:BillPay Admin}
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
   seed:
-    enabled: ${SEED_DATA:true}
+    enabled: ${SEED_DATA:false}

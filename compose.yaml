@@ -3,15 +3,15 @@ services:
     image: postgres:16-alpine
     container_name: billpay-postgres
     environment:
-      POSTGRES_DB: billpay
-      POSTGRES_USER: billpay
-      POSTGRES_PASSWORD: billpay
+      POSTGRES_DB: ${DB_NAME:-billpay}
+      POSTGRES_USER: ${DB_USERNAME:-billpay}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-billpay}
     ports:
       - "5432:5432"
     volumes:
       - billpay-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U billpay -d billpay"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-billpay} -d ${DB_NAME:-billpay}"]
       interval: 5s
       timeout: 5s
       retries: 10

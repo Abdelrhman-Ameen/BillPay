@@ -19,7 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Configuration
-@ConditionalOnProperty(name = "app.seed.enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "app.seed.enabled", havingValue = "true")
 public class DataInitializer {
 
     @Bean

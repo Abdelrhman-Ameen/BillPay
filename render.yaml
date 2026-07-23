@@ -1,0 +1,50 @@
+services:
+  - type: web
+    name: billpay
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeployTrigger: commit
+    healthCheckPath: /api/providers
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: billpay-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: billpay-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: billpay-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: billpay-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: billpay-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_NAME
+        value: BillPay Admin
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SEED_DATA
+        value: "false"
+
+databases:
+  - name: billpay-db
+    databaseName: billpay
+    user: billpay
+    plan: free
+    region: frankfurt
+    postgresMajorVersion: "16"
+    ipAllowList: []

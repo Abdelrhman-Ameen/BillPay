@@ -5,9 +5,15 @@
 .DS_Store
 Thumbs.db
 
-# Runtime configuration
-.env
+# Runtime configuration and secrets
+.env*
 *.local
+*.pem
+*.key
+*.p12
+*.jks
+secrets/
+credentials/
 
 # Build outputs
 backend/target/

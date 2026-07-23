@@ -1,56 +1,53 @@
-# BillPay — Bill Payment Management System
+# BillPay
 
-BillPay is a deliberately small full-stack portfolio project for managing household bills. A
-customer can register, sign in, view assigned bills, run a simulated payment, and review every
-successful or failed attempt. An administrator can create service providers, issue bills, and
-review payments across the system.
+BillPay is a full-stack demo for managing and paying household bills. It has two roles:
+customers can view their bills and try simulated payments, while administrators can add service
+providers, create bills, and review all payment attempts.
 
-The scope stays intentionally understandable: **four domain entities, one payment strategy
-interface, one Spring Boot application, and one Angular application**.
+No real payment gateway is connected, so the project never transfers real money.
 
 ![Java](https://img.shields.io/badge/Java-17-111111?style=flat-square)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-6DB33F?style=flat-square)
 ![Angular](https://img.shields.io/badge/Angular-20-DD0031?style=flat-square)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square)
 
-## What is included
+## Features
 
-### Customer
+Customers can:
 
-- Register and log in with a short-lived access token
-- View pending, paid, and cancelled bills belonging to their account
-- Pay a pending bill with cash, card, or wallet simulation
-- See a clear success or failure result
-- Review transaction history, including failed attempts
+- Register and log in
+- View their pending, paid, and cancelled bills
+- Pay a pending bill using cash, card, or wallet simulation
+- View successful and failed payment attempts
 
-### Administrator
+Administrators can:
 
-- Create service providers
-- Create bills for registered customers
-- View every recorded payment
+- Add service providers
+- Create bills for customers
+- View all recorded payments
 
-### Business rules
+The API also checks that bill amounts are positive, paid bills are not paid twice, cancelled bills
+cannot be paid, and customers cannot open another customer's bills.
 
-- Bill amounts use `BigDecimal` and must be positive.
-- A paid bill cannot be paid again.
-- A cancelled bill cannot be paid.
-- Customers can only access bills assigned to their own user ID.
-- A failed payment is recorded but leaves the bill pending.
-- A successful payment marks the bill paid and becomes its successful payment reference.
+## Tech stack
 
-## Architecture
+- Java 17 and Spring Boot
+- Spring Data JPA and PostgreSQL
+- Spring Security with JWT authentication
+- Angular and SCSS
+- JUnit 5, Mockito, AssertJ, and H2 for tests
+- Maven and pnpm
+
+## Project structure
 
 ```text
-Angular SPA (localhost:4200)
-        │ REST + Bearer token
-        ▼
-Spring Boot API (localhost:8080)
-        │ Spring Data JPA
-        ▼
-PostgreSQL (localhost:5432)
+BillPay/
+├── backend/       Spring Boot REST API
+├── frontend/      Angular application
+└── compose.yaml   Local PostgreSQL container
 ```
 
-Only four classes are JPA entities:
+The backend uses four JPA entities:
 
 ```text
 User 1 ─── * Bill * ─── 1 ServiceProvider
@@ -59,12 +56,12 @@ User 1 ─── * Bill * ─── 1 ServiceProvider
                  └── 0..1 successful Payment
 ```
 
-Failed attempts remain in `Payment`, which allows a customer to retry. `Bill.successfulPayment`
-points only to the attempt that settled the bill.
+A failed payment is saved in the transaction history, but the bill stays pending. Only a
+successful attempt marks the bill as paid.
 
-## OOP and Strategy pattern
+## Payment strategy
 
-All payment implementations use one abstraction:
+All payment types implement the same interface:
 
 ```java
 public interface PaymentMethod {
@@ -72,149 +69,148 @@ public interface PaymentMethod {
 }
 ```
 
-`CashPayment`, `CardPayment`, and `WalletPayment` implement that interface.
-`PaymentMethodRegistry` selects the implementation at runtime and `PaymentService` depends on the
-abstraction. This demonstrates interfaces, abstraction, encapsulation, polymorphism, dependency
-injection, and the Strategy pattern without adding unnecessary infrastructure.
+The implementations are `CashPayment`, `CardPayment`, and `WalletPayment`.
+`PaymentMethodRegistry` chooses the requested implementation, then `PaymentService` runs it.
 
-The simulator is deterministic:
+The simulation uses predictable rules so both outcomes are easy to test:
 
-- Cash is accepted.
-- Card payments above EGP 20,000 fail.
-- Wallet payments above EGP 5,000 fail.
-
-These rules make both success and failure easy to demonstrate without a real gateway.
+- Cash succeeds.
+- Card fails when the amount is more than EGP 20,000.
+- Wallet fails when the amount is more than EGP 5,000.
 
 ## Run locally
 
-Prerequisites: Java 17, Docker Desktop (or a local PostgreSQL 16 instance), and Node.js.
+You need Java 17, Node.js, pnpm, and either Docker Desktop or a local PostgreSQL database.
 
-1. Start PostgreSQL:
+### 1. Start PostgreSQL
 
-   ```bash
-   docker compose up -d db
-   ```
+```bash
+docker compose up -d db
+```
 
-2. Start the API:
+The included Compose file creates a local `billpay` database. Its default credentials are only for
+local development and can be changed with `DB_USERNAME` and `DB_PASSWORD`.
 
-   ```bash
-   cd backend
-   ./mvnw spring-boot:run
-   ```
+### 2. Set the JWT secret
 
-   On Windows PowerShell use `.\mvnw.cmd spring-boot:run`.
+`JWT_SECRET` is required and is not stored in this repository. Set it to a Base64-encoded random
+value before starting the API.
 
-3. Start the Angular app in another terminal:
+PowerShell example:
 
-   ```bash
-   cd frontend
-   pnpm install
-   pnpm start
-   ```
+```powershell
+$bytes = New-Object byte[] 48
+[Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+$env:JWT_SECRET = [Convert]::ToBase64String($bytes)
+```
 
-4. Open `http://localhost:4200`.
+To load the optional local demo accounts and sample bills:
 
-The Angular development server proxies `/api` requests to `http://localhost:8080`, avoiding
-browser CORS differences during local development.
+```powershell
+$env:SEED_DATA = "true"
+```
+
+### 3. Start the backend
+
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+On Windows, run `.\mvnw.cmd spring-boot:run`.
+
+### 4. Start the frontend
+
+In a second terminal:
+
+```bash
+cd frontend
+pnpm install
+pnpm start
+```
+
+Open `http://localhost:4200`. During development, Angular forwards `/api` requests to the backend
+at `http://localhost:8080`.
 
 ### Demo accounts
+
+These accounts are created only when `SEED_DATA=true`:
 
 | Role | Email | Password |
 |---|---|---|
 | Customer | `customer@billpay.dev` | `Customer123!` |
 | Administrator | `admin@billpay.dev` | `Admin123!` |
 
-The application seeds these accounts, three providers, and three pending bills into an empty
-database. Set `SEED_DATA=false` to disable demo data.
+Keep seeding disabled on a public or production deployment.
 
-## Configuration
+## Environment variables
 
-The API reads these optional environment variables:
+| Variable | Required | Default |
+|---|---:|---|
+| `JWT_SECRET` | Yes | None |
+| `DB_URL` | No | `jdbc:postgresql://localhost:5432/billpay` |
+| `DB_USERNAME` | No | `billpay` |
+| `DB_PASSWORD` | No | `billpay` |
+| `ADMIN_NAME` | No | `BillPay Admin` |
+| `ADMIN_EMAIL` | No | None |
+| `ADMIN_PASSWORD` | No | None |
+| `SEED_DATA` | No | `false` |
+| `PORT` | No | `8080` |
 
-| Variable | Default |
-|---|---|
-| `DB_URL` | `jdbc:postgresql://localhost:5432/billpay` |
-| `DB_USERNAME` | `billpay` |
-| `DB_PASSWORD` | `billpay` |
-| `JWT_SECRET` | Development-only Base64 secret |
-| `SEED_DATA` | `true` |
-| `PORT` | `8080` |
+Local `.env` files, private keys, credentials, dependencies, logs, and build output are excluded by
+`.gitignore`.
 
-Use a new high-entropy Base64 `JWT_SECRET` outside local development.
+If both `ADMIN_EMAIL` and `ADMIN_PASSWORD` are supplied, the backend creates that administrator
+the first time it starts. The password must contain at least eight characters.
 
-## REST API
+## Deploy
 
-| Method | Endpoint | Access | Purpose |
-|---|---|---|---|
-| POST | `/api/auth/register` | Public | Register customer |
-| POST | `/api/auth/login` | Public | Log in |
-| GET | `/api/providers` | Public | List providers |
-| GET | `/api/customer/bills` | Customer | View own bills |
-| POST | `/api/customer/bills/{id}/payments` | Customer | Pay own pending bill |
-| GET | `/api/customer/payments` | Customer | View own history |
-| POST | `/api/admin/providers` | Admin | Create provider |
-| POST | `/api/admin/bills` | Admin | Create customer bill |
-| GET | `/api/admin/customers` | Admin | List customers for bill creation |
-| GET | `/api/admin/payments` | Admin | View all payments |
+The root `Dockerfile` builds Angular and serves it from the Spring Boot application, so the UI and
+API use the same public URL. `render.yaml` also defines a PostgreSQL database and keeps its
+credentials in Render environment variables.
 
-## Tests and builds
+[Deploy BillPay on Render](https://render.com/deploy?repo=https://github.com/Abdelrhman-Ameen/BillPay)
+
+During the first deployment, Render asks for `ADMIN_EMAIL` and `ADMIN_PASSWORD`. Do not commit
+those values to this repository.
+
+## API endpoints
+
+| Method | Endpoint | Access |
+|---|---|---|
+| POST | `/api/auth/register` | Public |
+| POST | `/api/auth/login` | Public |
+| GET | `/api/providers` | Public |
+| GET | `/api/customer/bills` | Customer |
+| POST | `/api/customer/bills/{id}/payments` | Customer |
+| GET | `/api/customer/payments` | Customer |
+| POST | `/api/admin/providers` | Administrator |
+| POST | `/api/admin/bills` | Administrator |
+| GET | `/api/admin/customers` | Administrator |
+| GET | `/api/admin/payments` | Administrator |
+
+## Tests
+
+Run the backend tests:
 
 ```bash
 cd backend
 ./mvnw test
+```
 
-cd ../frontend
+Build the Angular application:
+
+```bash
+cd frontend
 pnpm build
 ```
 
-Backend tests use JUnit 5, Mockito, AssertJ, and an in-memory H2 database configured in PostgreSQL
-compatibility mode. Focused unit tests cover each payment strategy and the critical payment
-business rules.
+The test suite covers the three payment strategies and the main bill-payment rules.
 
-## Interface direction
+## Possible next steps
 
-The UI uses a black-dominant dark theme with white typography and yellow energy accents. A light
-theme is available from the header. Motion is purposeful: staggered section reveals, a floating
-dashboard preview, a scrolling services ticker, sticky workflow storytelling, and animated
-payment result states. Reduced-motion preferences are respected.
-
-## Seven-day development plan
-
-- **Days 1–2:** Java entities, payment strategies, and unit tests
-- **Days 3–4:** Spring Boot REST APIs, JPA, security, and PostgreSQL
-- **Days 5–6:** Angular landing page and customer/admin workspaces
-- **Day 7:** End-to-end testing, README, screenshots, and cleanup
-- **Later:** Deployment hardening and security improvements
-
-## Future Improvements
-
-The initial version intentionally excludes:
-
-- Microservices and Kubernetes
-- RabbitMQ or Kafka
-- Merchant settlements
-- Partial refunds
-- Double-entry ledgers
-- Complex idempotency handling
-- Concurrent payment processing
-- Real payment gateways
-- Refresh-token rotation
-- AI features
-
-Reasonable next steps are Docker images for the API and UI, Flyway migrations, stronger secret
-management, email verification, refresh tokens, pagination, and integration tests with
-Testcontainers.
-
-## CV wording
-
-**BillPay — Bill Payment Management System**<br>
-*Java, Spring Boot, Angular, PostgreSQL, JPA, JUnit*
-
-- Developed a full-stack bill-payment application enabling customers to view bills, perform
-  simulated payments, and review transaction history.
-- Designed REST APIs using Spring Boot and persisted users, bills, service providers, and
-  payments using Spring Data JPA and PostgreSQL.
-- Applied OOP principles and the Strategy pattern to support multiple payment methods through a
-  common interface.
-- Implemented validation, role-based access, exception handling, and unit tests using JUnit and
-  Mockito.
+- Add Flyway database migrations
+- Add pagination to bills and payments
+- Add refresh-token rotation
+- Add Testcontainers integration tests
+- Add database backups and monitoring
