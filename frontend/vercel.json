@@ -5,7 +5,7 @@
   "outputDirectory": "dist/frontend/browser",
   "rewrites": [
     {
-      "source": "/((?!.*\\.).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
