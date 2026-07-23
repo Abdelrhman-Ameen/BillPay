@@ -169,8 +169,9 @@ the first time it starts. The password must contain at least eight characters.
 The Angular interface can be deployed separately as a static Vercel preview. Import this repository
 in Vercel, set the root directory to `frontend`, and use the included `vercel.json`.
 
-The online preview does not connect to the Spring Boot API. It shows a notice explaining that
-login, bills, and payments are available when the complete project is run locally.
+The online preview does not connect to the Spring Boot API. The Customer and Admin demo accounts
+run against versioned browser-only sample data, including simulated payments and admin actions.
+Registration and permanent server-side data still require the complete project to run locally.
 
 The backend and PostgreSQL configuration remain in this repository for local development. The root
 `Dockerfile` can still build the complete frontend and backend as one container later.

@@ -56,10 +56,12 @@ export class AuthPageComponent {
   }
 
   useDemo(role: 'customer' | 'admin'): void {
+    this.error.set('');
     this.form.patchValue({
       email: role === 'admin' ? 'admin@billpay.dev' : 'customer@billpay.dev',
       password: role === 'admin' ? 'Admin123!' : 'Customer123!',
     });
+    this.completeAuthentication(this.auth.loginDemo(role));
   }
 
   togglePassword(): void {
@@ -73,13 +75,17 @@ export class AuthPageComponent {
       return;
     }
 
-    this.loading.set(true);
     const { fullName, email, password } = this.form.getRawValue();
     const request =
       this.mode() === 'register'
         ? this.auth.register(fullName, email, password)
         : this.auth.login(email, password);
+    this.completeAuthentication(request);
+  }
 
+  private completeAuthentication(request: ReturnType<AuthService['login']>): void {
+    if (this.loading()) return;
+    this.loading.set(true);
     request.pipe(finalize(() => this.loading.set(false))).subscribe({
       next: (response) => {
         void this.router.navigate([response.user.role === 'ADMIN' ? '/admin' : '/dashboard']);
