@@ -166,13 +166,14 @@ the first time it starts. The password must contain at least eight characters.
 
 ## Deploy
 
-The root `Dockerfile` builds Angular and serves it from Spring Boot, so the UI and API use the same
-public URL. The current demo deployment uses a free Back4app container with a free Neon PostgreSQL
-database.
+The Angular interface can be deployed separately as a static Vercel preview. Import this repository
+in Vercel, set the root directory to `frontend`, and use the included `vercel.json`.
 
-Create the Neon database first, then add its JDBC URL, username, and password to the Back4app
-container environment. Also add `JWT_SECRET`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` there. Do not
-commit any of those values to this repository.
+The online preview does not connect to the Spring Boot API. It shows a notice explaining that
+login, bills, and payments are available when the complete project is run locally.
+
+The backend and PostgreSQL configuration remain in this repository for local development. The root
+`Dockerfile` can still build the complete frontend and backend as one container later.
 
 ## API endpoints
 

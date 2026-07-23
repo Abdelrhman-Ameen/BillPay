@@ -39,7 +39,7 @@ public class DataInitializer {
                     Role.ADMIN
             ));
             User customer = userRepository.save(new User(
-                    "Mariam Hassan",
+                    "Abdurrahman Ameen",
                     "customer@billpay.dev",
                     passwordEncoder.encode("Customer123!"),
                     Role.CUSTOMER

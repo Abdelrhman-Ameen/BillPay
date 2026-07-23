@@ -132,6 +132,68 @@ nav {
   background: var(--yellow);
 }
 
+.frontend-notice {
+  position: fixed;
+  z-index: 150;
+  right: clamp(16px, 3vw, 42px);
+  bottom: clamp(16px, 3vw, 32px);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 11px;
+  width: min(390px, calc(100vw - 32px));
+  padding: 14px 14px 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--yellow) 45%, var(--line));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: 0 16px 48px rgb(0 0 0 / 20%);
+  color: var(--text);
+  backdrop-filter: blur(18px);
+
+  .notice-dot {
+    width: 8px;
+    height: 8px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background: var(--yellow);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--yellow) 14%, transparent);
+  }
+
+  strong {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 0.82rem;
+  }
+
+  p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.75rem;
+    line-height: 1.45;
+  }
+
+  button {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--muted);
+
+    &:hover {
+      background: var(--surface-strong);
+      color: var(--text);
+    }
+
+    svg {
+      width: 15px;
+      height: 15px;
+    }
+  }
+}
+
 main {
   min-height: 100vh;
 }
