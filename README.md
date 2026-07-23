@@ -151,6 +151,7 @@ Keep seeding disabled on a public or production deployment.
 | `DB_URL` | No | `jdbc:postgresql://localhost:5432/billpay` |
 | `DB_USERNAME` | No | `billpay` |
 | `DB_PASSWORD` | No | `billpay` |
+| `DB_POOL_SIZE` | No | `5` |
 | `ADMIN_NAME` | No | `BillPay Admin` |
 | `ADMIN_EMAIL` | No | None |
 | `ADMIN_PASSWORD` | No | None |
@@ -165,14 +166,13 @@ the first time it starts. The password must contain at least eight characters.
 
 ## Deploy
 
-The root `Dockerfile` builds Angular and serves it from the Spring Boot application, so the UI and
-API use the same public URL. `render.yaml` also defines a PostgreSQL database and keeps its
-credentials in Render environment variables.
+The root `Dockerfile` builds Angular and serves it from Spring Boot, so the UI and API use the same
+public URL. The current demo deployment uses a free Back4app container with a free Neon PostgreSQL
+database.
 
-[Deploy BillPay on Render](https://render.com/deploy?repo=https://github.com/Abdelrhman-Ameen/BillPay)
-
-During the first deployment, Render asks for `ADMIN_EMAIL` and `ADMIN_PASSWORD`. Do not commit
-those values to this repository.
+Create the Neon database first, then add its JDBC URL, username, and password to the Back4app
+container environment. Also add `JWT_SECRET`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` there. Do not
+commit any of those values to this repository.
 
 ## API endpoints
 

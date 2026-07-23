@@ -20,6 +20,7 @@ FROM eclipse-temurin:17-jre-alpine
 RUN addgroup -S billpay && adduser -S billpay -G billpay
 WORKDIR /app
 COPY --from=backend-build /backend/target/*.jar app.jar
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=50 -XX:InitialRAMPercentage=20 -XX:MaxMetaspaceSize=96m -Xss256k -XX:+UseSerialGC"
 USER billpay
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
