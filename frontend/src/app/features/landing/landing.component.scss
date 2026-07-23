@@ -14,39 +14,39 @@
   border-bottom: 1px solid var(--line);
 }
 
-.hero-grid {
+.hero-backdrop {
   position: absolute;
   inset: 0;
-  opacity: 0.55;
-  background-image:
-    linear-gradient(var(--line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 90px 90px;
-  mask-image: linear-gradient(to bottom, black, transparent 86%);
-}
-
-.orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(2px);
+  overflow: hidden;
   pointer-events: none;
-}
 
-.orb-one {
-  top: 16%;
-  left: 50%;
-  width: 480px;
-  height: 480px;
-  background: radial-gradient(circle, var(--yellow-soft), transparent 68%);
-  animation: breathe 7s ease-in-out infinite;
-}
+  &::before {
+    position: absolute;
+    top: 49%;
+    right: -0.06em;
+    color: transparent;
+    content: 'BILLPAY';
+    font-family: var(--font-display);
+    font-size: clamp(10rem, 24vw, 27rem);
+    letter-spacing: -0.1em;
+    line-height: 0.72;
+    opacity: 0.42;
+    transform: translateY(-50%) rotate(-5deg);
+    white-space: nowrap;
+    -webkit-text-stroke: 1px color-mix(in srgb, var(--text) 22%, transparent);
+  }
 
-.orb-two {
-  right: -160px;
-  bottom: -220px;
-  width: 500px;
-  height: 500px;
-  border: 1px solid var(--line);
+  &::after {
+    position: absolute;
+    top: 14%;
+    right: clamp(30px, 8vw, 130px);
+    width: clamp(90px, 12vw, 180px);
+    height: clamp(10px, 1.1vw, 16px);
+    background: var(--yellow);
+    content: '';
+    opacity: 0.82;
+    transform: rotate(-8deg);
+  }
 }
 
 .hero-copy {
@@ -731,7 +731,6 @@ h1 {
 
     &::before {
       background: #0b0b0b;
-      box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.1);
     }
   }
 
@@ -757,13 +756,26 @@ h1 {
   }
 }
 
-.cta-noise {
+.cta-mark {
   position: absolute;
-  inset: -100px;
-  opacity: 0.12;
-  background-image: radial-gradient(#000 1px, transparent 1px);
-  background-size: 15px 15px;
-  transform: rotate(-8deg);
+  inset: 0;
+  pointer-events: none;
+
+  &::before {
+    position: absolute;
+    top: 52%;
+    left: 50%;
+    color: transparent;
+    content: 'BILLPAY';
+    font-family: var(--font-display);
+    font-size: clamp(10rem, 25vw, 28rem);
+    letter-spacing: -0.1em;
+    line-height: 0.72;
+    opacity: 0.16;
+    transform: translate(-50%, -50%) rotate(-5deg);
+    white-space: nowrap;
+    -webkit-text-stroke: 2px #0b0b0b;
+  }
 }
 
 footer {
